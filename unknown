@@ -1,0 +1,22 @@
+# 이상한 것들
+#1
+select 
+	A.*
+FROM
+(
+	select
+		@ROWNUM:=@ROWNUM +1 AS ROWNUM,
+		team.*
+	from
+		team,
+    (select @ROWNUM:=0)R
+) A
+where cpt_id like '235736'
+and c_time between '2021-05-10'and	'2021-06-26' 
+
+#2  ,아마도 rownum으로 index 번호를 매기는 query?
+select @rownum:=@rownum+1, c_time
+from team 
+where (@rownum:=0)=0
+and cpt_id like '235590'
+and c_time between '2020-03-29'and	'2020-05-11'
