@@ -56,7 +56,7 @@ and c_time between "2022-02-11" and "2022-02-12"
 select * from(
 	select keyword, user_id, date_format(c_time, "%Y-%m-%d")date, count(distinct keyword) as kk
 	from search_log
-	where keyword in ("데이콘 베이직", "펭귄")
+	where keyword in ("베이직", "펭귄")
 	group by date, user_id
 	having kk >1
 	
@@ -134,7 +134,7 @@ order by term asc, vview desc
 # count(distinct column_name) 중복 제거한 개수
 select *, date_format(c_time, "%Y-%m-%d") date, count(distinct user_id) as ttag from Dacon.search_log
 
-where user_id not in(select id from user where mail like "%@dacon%" 
+where user_id not in(select id from user where mail like "%@google%" 
 or phone in("01063381041", "01067332540","01029010351","01086514578","01090708653","01027600908","01023900120","01037952272","01052097817","01050927445","01095127985","01028505975","01029618270","01073504771","01089609442","01093480857","01025367500") 
 or id in("4","400461", "400025","441565", "421719")) 
 and user_id not like '-1'
