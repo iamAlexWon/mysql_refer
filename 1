@@ -1,0 +1,288 @@
+# Processlist 
+select * from INFORMATION_SCHEMA.PROCESSLIST 
+
+# basic structure
+select * from a.table_name
+left join b. table_name
+on a.column_name = b.column_name
+
+where column_name like ""  # not like
+and column_name = 
+and b.column_name in(select b.column_name from b.table_name where column_name <  >)  #not in
+or column_name like <    >
+group by column_name
+order by column_name desc, asc
+having column_name 
+
+#1일전까지 자료
+select * from user 
+where c_time >= date_add(now(), interval -1 day) #c_time 이 1일 전보다 큰 값일 경우
+
+#10일전까지 자료
+select * from user 
+where c_time >= date_add(now(), interval -1 day) #c_time 이 10일 전보다 큰 값일 경우
+
+#다른 table의 column 조건을 적용
+select * from submission
+where cpt_id in(
+	select cpt_id from competition
+	where is_official like '1'
+	and is_public like '1'
+	)
+group by cpt_id
+
+# '<a href="' 부터 '" target="' 전까지 문자열 추출하는 쿼리
+select substring_index(description, '<a href="', 1) as text,
+substring_index(substring_index(description, '<a href="', -1), '" target="', 1) as url
+from reply_tb
+
+where content_id like 405833
+and description like "%href%"   # %%사이의 문제는 %해당 문자를 포함하는%
+
+
+#쿼리 2개 병합, UNION
+
+SELECT date_format(c_time, "%Y%m%d") as patient, "join" as type, id, c_time
+from user
+where id in("402772")
+
+UNION #2개의 쿼리문을 병합
+
+SELECT date_format(c_time, "%Y%m%d") as patient,  "reply_cs" as type, user_id, c_time
+FROM  reply_cs where user_id in("402772")
+and c_time between "2022-02-11" and "2022-02-12"
+
+# UNION 하여 추출한 쿼리를 다시 group by
+select * from(
+	select keyword, user_id, date_format(c_time, "%Y-%m-%d")date, count(distinct keyword) as kk
+	from search_log
+	where keyword in ("데이콘 베이직", "펭귄")
+	group by date, user_id
+	having kk >1
+	
+	union
+	
+	select keyword, user_id, date_format(c_time, "%Y-%m-%d")date, count(distinct keyword) as kk
+	from search_log
+	where user_id not like -1
+	and c_time > "2022-01-01"
+	and keyword in ("타이타닉", "titanic")
+	group by date, user_id
+	having kk >1
+) as cou
+group by user_id
+
+
+# date_format으로 timestamp 설정, left join 하는법
+select a.id, a.c_time, date_format(c_time, "%Y-%m-%d") as date_join from user as a
+left join reply_cs as b
+on a.id = b.user_id
+where a.id in("63240","402374","165428","426124")
+
+#avg(table column) 으로 group by한 테이블 값의 평균을 나타낼 수 있다
+select avg(submission_cnt) sub_avg, ranking
+from now_ranking_by_team
+
+where team_id in(select team_id from team where leader_id not in(select id from user where mail like "%@dacon%" 
+or phone in("01063381041", "01067332540","01029010351","01086514578","01090708653","01027600908","01023900120","01037952272","01052097817","01050927445","01095127985","01028505975","01029618270","01073504771","01089609442","01093480857","01025367500") 
+or id in("4","400461", "400025","441565")))
+and cpt_id in(select cpt_id from competition 
+where is_official like 1 and is_public like 1
+and period_start between "2021-01-01" and "2021-12-31"
+and (keyword_eng not like "%Basic%"  || '%' or keyword_eng is null)
+and keyword_eng not like "%월간%"  
+and keyword_eng not like "%비트 트레이더%" 
+and (type not like 8 || '%' or type is null))  # not like 로 추출하면 null 값이 포함이 안되기 때문에 || '%' or column_name is null 을 입력해줘야 한다
+
+group by ranking
+having ranking <= 20
+
+#date의 차이
+
+select a.user_id, date_format(a.c_time, "%Y-%m-%d") date, 
+#datediff(date_format(a.c_time, "%Y-%m-%d"), date_format(b.c_time, "%Y-%m-%d")) td
+또는 
+#datediff(a.c_time, b.c_time) td 
+
+from reply_tb as a
+left join user as b on a.user_id = b.id
+
+# join 한 테이블의 c_time 조건
+select a.cpt_id, count(b.leader_id) as team_sub from competition as a 
+left join team as b on a.cpt_id = b.cpt_id 
+where b.c_time <= a.period_end #b 테이블의 c_time 이 a 테이블의 period_end를  
+group by a.cpt_id
+
+
+#datediff 의 사용용도, 게시글 작성일로부터 경과일 별 조회 수(e.g.,조회수 발생일 - 게시글 작성일) 
+select a.content_id, count(a.seq) vview,date_format(a.c_time, "%Y-%m-%d") date, 
+datediff(date_format(a.c_time, "%Y-%m-%d"), date_format(b.c_time, "%Y-%m-%d")) term  
+from DaconLog.views_log_cs as a
+left join codeshare as b on a.content_id = b.cs_id
+
+where b.is_removed like 0
+and b.is_private like 0
+and b.user_id not in(select id from user where mail like "%@dacon%" 
+or phone in("01063381041", "01067332540","01029010351","01086514578","01090708653","01027600908","01023900120","01037952272","01052097817","01050927445","01095127985","01028505975","01029618270","01073504771","01089609442","01093480857","01025367500") 
+or id in("4","400461", "400025","441565")) 
+and a.ip not like "59.6.230.229"
+
+group by content_id, date
+having term <30
+order by term asc, vview desc
+
+# count(distinct column_name) 중복 제거한 개수
+select *, date_format(c_time, "%Y-%m-%d") date, count(distinct user_id) as ttag from Dacon.search_log
+
+where user_id not in(select id from user where mail like "%@dacon%" 
+or phone in("01063381041", "01067332540","01029010351","01086514578","01090708653","01027600908","01023900120","01037952272","01052097817","01050927445","01095127985","01028505975","01029618270","01073504771","01089609442","01093480857","01025367500") 
+or id in("4","400461", "400025","441565", "421719")) 
+and user_id not like '-1'
+group by keyword
+
+
+#일별 카운트
+select DATE_FORMAT(c_time,'%Y-%m-%d') date, COUNT(*)   # count(*)는 c_time을 기준으로 row를 count, 해당 column 만 원하면 count(column_name), 중복제거count(distinct column_name)
+FROM codeshare 
+where c_time between '2021-05-01' and '2021-07-15' 
+GROUP BY date
+
+
+
+#rownum (index 추가), c_time 순으로 index 번호 추가
+select @rownum:=@rownum+1, c_time
+from team 
+where (@rownum:=0)=0
+and cpt_id like '235590'
+and c_time between '2020-03-29'and	'2020-05-11'
+
+#카운트 누적
+SET @va = 0; #먼저 실행해서 @va를 0으로 세팅
+
+#두 번쨰로 
+SELECT a.order_date, a.sum_amount, (@va := @va + a.sum_amount) as cumsum_amount 
+FROM (
+	SELECT date_format(c_time, '%Y-%m') order_date, count(id) sum_amount 
+	FROM user 
+	GROUP BY order_date ORDER BY order_date 
+) a;
+
+#기간 구하는 함수 datediff
+select datediff(a.period_end, a.period_start) as term
+from <    >
+
+---
+#sum(point)가 0보다 같거나 크고 20보다 작은 user_id 카운트
+select count(c.user_id) as cnt 
+from(
+	select user_id, sum(point) as point 
+	from user_xp 
+	group by user_id 
+	having point >=0 and point<20
+) as c
+
+---
+# 날짜별 1인당 토크 작성 갯수
+select count(tb_id) / count(distinct user_id) avg, 
+date_format(c_time, "%Y-%m-%d") date 
+from talkboard
+group by date
+
+
+#날짜 데이터를 만들고, 대회 period_start, period_end 카운트를 left join
+
+select a.Date , count(b.cpt_id) start , count(c.cpt_id) end 
+from (select curdate() - INTERVAL (a.a + (10 * b.a) + (100 * c.a) + (1000 * d.a)) 	
+	DAY as Date from (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all 
+        select 5 union all select 6 union all select 7 union all select 8 union all select 9) 
+	as a cross join (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all 
+        select 5 union all select 6 union all select 7 union all select 8 union all select 9) 
+	as b cross join (select 0 as a union all select 1 union all select 2 union all select 3 union all 
+        select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) 
+	as c cross join (select 0 as a union all select 1 union all select 2 union all select 3 union all 
+        select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as d ) a 
+left join competition as b on date_format(b.period_start, "%Y-%m-%d") = a.Date 
+and b.is_public like 1 and b.is_official like 1 and b.keyword_eng not like "%Basic%" 
+left join competition as c on date_format(c.period_end, "%Y-%m-%d") = a.Date 
+and c.is_public like 1 and c.is_official like 1 and c.keyword_eng not like "%Basic%" 
+where a.Date > "2018-01-01" 
+group by a.Date
+
+#날짜 컬럼 만들기
+select a.Date 
+from (
+    select curdate() - INTERVAL (a.a + (10 * b.a) + (100 * c.a) + (1000 * d.a) ) DAY as Date
+    from (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as a
+    cross join (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as b
+    cross join (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as c
+    cross join (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as d
+) a
+
+where a.Date > "2018-01-01"
+
+
+#날짜 컬럼 더 많이
+SELECT general_date.date AS date
+
+       FROM (
+           SELECT date 
+           FROM (
+              SELECT curdate() - interval (a.a + (10 * b.a) + (100 * c.a) + (1000 * d.a) + (10000 * e.a)) day as date
+              FROM (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as a
+              CROSS JOIN (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as b
+              CROSS JOIN (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as c
+              CROSS JOIN (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as d
+              CROSS JOIN (select 0 as a union all select 1 union all select 2 union all select 3 union all select 4 union all select 5 union all select 6 union all select 7 union all select 8 union all select 9) as e
+               ) dates
+
+
+           ORDER BY date) as general_date
+
+
+#조건 테이블 의 평균 구하는 법
+
+select avg(td)
+from(
+	select datediff(date_format(a.c_time, "%Y-%m-%d"), date_format(b.c_time, "%Y-%m-%d")) td 
+	from reply_tb as a
+	left join user as b on a.user_id = b.id
+	where a.content_id in(
+		select tb_id from talkboard where cpt_id like 235698
+	)
+	and a.is_removed like 0
+	
+) as td
+
+
+#그룹별 평균
+select avg(td), user_test from(
+	select datediff(date_format(a.c_time, "%Y-%m-%d"), date_format(b.c_time, "%Y-%m-%d")) td , a.user_id user_test
+	from reply_tb as a
+	left join user as b on a.user_id = b.id
+	where a.content_id in(
+		select tb_id from talkboard where cpt_id like 235698
+	)
+	and a.is_removed like 0
+)as c 
+group by user_test
+
+#게시글 작성일로 부터 경과일을 term으로 설정하고, term 별 평균
+select term, avg(view)
+from(
+select a.*,count(a.seq) as view, datediff(date_format(a.c_time, "%Y-%m-%d"), date_format(b.c_time, "%Y-%m-%d")) term
+from DaconLog.views_log_cs as a
+left join Dacon.codeshare as b
+on a.content_id = b.cs_id
+
+where content_id in(
+select cs_id from codeshare where user_id in("428400","445202","445268","444669","401269")and c_time > "2022-03-28")
+
+group by content_id, term)
+as view group by term
+
+# 다른 테이블의 컬럼 참조(join 없이)
+select * from submission
+where cpt_id like 235870
+and team_id like 119327
+and c_time between (select period_start from competition where cpt_id like 235870) 
+and (select period_end from competition where cpt_id like 235870) 
