@@ -77,15 +77,15 @@ group by user_id
 select a.id, a.c_time, date_format(c_time, "%Y-%m-%d") as date_join from user as a
 left join reply_cs as b
 on a.id = b.user_id
-where a.id in("63240","402374","165428","426124")
+where a.id in("11","22","33","44")
 
 #avg(table column) 으로 group by한 테이블 값의 평균을 나타낼 수 있다
 select avg(submission_cnt) sub_avg, ranking
 from now_ranking_by_team
 
 where team_id in(select team_id from team where leader_id not in(select id from user where mail like "%@dacon%" 
-or phone in("01063381041", "01067332540","01029010351","01086514578","01090708653","01027600908","01023900120","01037952272","01052097817","01050927445","01095127985","01028505975","01029618270","01073504771","01089609442","01093480857","01025367500") 
-or id in("4","400461", "400025","441565")))
+or phone in("010111111", "010222222","010333333","010444444","0105555555","010666666") 
+or id in("1","22", "333","444")))
 and cpt_id in(select cpt_id from competition 
 where is_official like 1 and is_public like 1
 and period_start between "2021-01-01" and "2021-12-31"
@@ -123,8 +123,8 @@ left join codeshare as b on a.content_id = b.cs_id
 where b.is_removed like 0
 and b.is_private like 0
 and b.user_id not in(select id from user where mail like "%@dacon%" 
-or phone in("01063381041", "01067332540","01029010351","01086514578","01090708653","01027600908","01023900120","01037952272","01052097817","01050927445","01095127985","01028505975","01029618270","01073504771","01089609442","01093480857","01025367500") 
-or id in("4","400461", "400025","441565")) 
+or phone in("010111111", "010222222","010333333","010444444","0105555555","010666666") 
+or id in("1","222", "333","44")) 
 and a.ip not like "59.6.230.229"
 
 group by content_id, date
@@ -134,9 +134,9 @@ order by term asc, vview desc
 # count(distinct column_name) 중복 제거한 개수
 select *, date_format(c_time, "%Y-%m-%d") date, count(distinct user_id) as ttag from Dacon.search_log
 
-where user_id not in(select id from user where mail like "%@google%" 
-or phone in("01063381041", "01067332540","01029010351","01086514578","01090708653","01027600908","01023900120","01037952272","01052097817","01050927445","01095127985","01028505975","01029618270","01073504771","01089609442","01093480857","01025367500") 
-or id in("4","400461", "400025","441565", "421719")) 
+where user_id not in(select id from user where mail like "%@dacon%" 
+or phone in("010111111", "010222222","010333333","010444444","0105555555","010666666") 
+or id in("1","2", "3","4", "5")) 
 and user_id not like '-1'
 group by keyword
 
@@ -153,7 +153,7 @@ GROUP BY date
 select @rownum:=@rownum+1, c_time
 from team 
 where (@rownum:=0)=0
-and cpt_id like '235590'
+and cpt_id like '111111'
 and c_time between '2020-03-29'and	'2020-05-11'
 
 #카운트 누적
@@ -247,7 +247,7 @@ from(
 	from reply_tb as a
 	left join user as b on a.user_id = b.id
 	where a.content_id in(
-		select tb_id from talkboard where cpt_id like 235698
+		select tb_id from talkboard where cpt_id like 111111
 	)
 	and a.is_removed like 0
 	
@@ -260,7 +260,7 @@ select avg(td), user_test from(
 	from reply_tb as a
 	left join user as b on a.user_id = b.id
 	where a.content_id in(
-		select tb_id from talkboard where cpt_id like 235698
+		select tb_id from talkboard where cpt_id like 111111
 	)
 	and a.is_removed like 0
 )as c 
@@ -275,14 +275,14 @@ left join Dacon.codeshare as b
 on a.content_id = b.cs_id
 
 where content_id in(
-select cs_id from codeshare where user_id in("428400","445202","445268","444669","401269")and c_time > "2022-03-28")
+select cs_id from codeshare where user_id in("111111","222222","333333","444444","555555")and c_time > "2022-03-28")
 
 group by content_id, term)
 as view group by term
 
 # 다른 테이블의 컬럼 참조(join 없이)
 select * from submission
-where cpt_id like 235870
-and team_id like 119327
-and c_time between (select period_start from competition where cpt_id like 235870) 
-and (select period_end from competition where cpt_id like 235870) 
+where cpt_id like 111222
+and team_id like 111222
+and c_time between (select period_start from competition where cpt_id like 111111) 
+and (select period_end from competition where cpt_id like 111111) 
